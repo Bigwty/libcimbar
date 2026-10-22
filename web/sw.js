@@ -1,5 +1,5 @@
 
-var _cacheName = 'cimbar-js-v%VERSION%';
+var _cacheName = 'cimbar-js-b-only-original-style-v%VERSION%';
 var _cacheFiles = [
   '/',
   '/index.html',
@@ -10,6 +10,8 @@ var _cacheFiles = [
   '/icon-192x192.png',
   '/icon-512x512.png',
   '/main.js',
+  '/send.js',
+  '/send-worker.js',
   '/pwa.json'
 ];
 

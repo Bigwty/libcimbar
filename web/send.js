@@ -5,7 +5,7 @@ var Send = function () {
   var _canvas = undefined; // set by init
 
   // configurable
-  var _interval = 66;
+  var _interval = 1000 / 15;
   var _colorBalance = false;
 
   // internal
@@ -136,7 +136,7 @@ var Send = function () {
       if (!timestamp || elapsed < _interval) {
         return;
       }
-      _lastFrame = timestamp;
+      _lastFrame = timestamp - (elapsed % _interval);
 
       _counter += 1;
       if (_pause > 0) {
@@ -157,9 +157,9 @@ var Send = function () {
       }
     },
 
-    setMode: function (mode_val) {
+    setMode: function () {
       // call resize after this from Main?
-      Module._cimbare_configure(mode_val, -1);
+      Module._cimbare_configure(68, -1);
       Report.setAspectRatio(Module._cimbare_get_aspect_ratio());
     },
 
@@ -167,7 +167,7 @@ var Send = function () {
       if (!val) {
         return;
       }
-      _interval = Math.floor(1000 / val);
+      _interval = 1000 / val;
       console.log("new frame delay interval is " + _interval);
     }
   };

@@ -1,15 +1,10 @@
 <!doctype html>
-<html lang="en" data-framework="javascript">
-
+<html lang="zh-CN">
 <head>
-  <title>Cimbar Encoder</title>
+  <title>跨网文件传输系统编码端</title>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="manifest" href="pwa.json">
-</head>
-
-<body>
-
   <style>
     * {
       margin: 0;
@@ -121,313 +116,49 @@
       display: block;
     }
 
-    /* options */
-    #nav-container a.mode-b,
-    #nav-container a.mode-bm,
-    #nav-container a.mode-bu,
-    #nav-container a.mode-4c {
-      color: #555;
-    }
 
-    #nav-container.mode-b a.mode-b,
-    #nav-container.mode-bm a.mode-bm,
-    #nav-container.mode-bu a.mode-bu,
-    #nav-container.mode-4c a.mode-4c {
-      color: #9fa6b2;
-    }
-
-    /* nav stuff */
-    /* built off of https://codepen.io/dannievinther/pen/NvZjvz */
-    #nav-container {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    }
-
-    #nav-container .bg {
-      pointer-events: auto;
-      position: absolute;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      visibility: hidden;
-      opacity: 0;
-      transition: .3s;
-      background: black;
-    }
-
-    #nav-container:focus-within .bg {
-      visibility: visible;
-      opacity: .6;
-    }
-
-    #nav-container * {
-      visibility: visible;
-    }
-
-    #nav-button {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      height: 60px;
-      width: 30px;
-      margin-left: 15px;
-      cursor: pointer;
-      pointer-events: auto;
-      touch-action: manipulation;
-      border: 0;
-      outline: 0;
-      background-image: linear-gradient(180deg, rgb(0, 0, 0, 0) 10%, rgb(0, 0, 0) 40%, rgb(0, 0, 0) 60%, rgb(0, 0, 0, 0) 90%);
-      background-color: initial;
-    }
-
-    #nav-button.hide {
-      opacity: 0;
-      transition: .3s;
-    }
-
-    #nav-container:focus-within #nav-button.hide {
-      opacity: 1;
-    }
-
-    .icon-bar {
-      display: block;
-      width: 100%;
-      height: 3px;
-      transition: .3s;
-    }
-
-    .icon-bar+.icon-bar {
-      margin-top: 3px;
-    }
-
-    #nav-container .icon-bar:nth-of-type(1) {
-      background-color: #00ff00;
-      box-shadow: 0px 0px 5px #00ff00, 0px 0px 2px #00ff00;
-    }
-
-    #nav-container .icon-bar:nth-of-type(2) {
-      background-color: #ffff00;
-      box-shadow: 0px 0px 5px #ffff00, 0px 0px 2px #ffff00;
-    }
-
-    #nav-container .icon-bar:nth-of-type(3) {
-      background-color: #00ffff;
-      box-shadow: 0px 0px 5px #00ffff, 0px 0px 2px #00ffff;
-    }
-
-    #nav-container .icon-bar:nth-of-type(4) {
-      background-color: #ff00ff;
-      box-shadow: 0px 0px 5px #ff00ff, 0px 0px 2px #ff00ff;
-    }
-
-    #nav-container.mode-4c .icon-bar:nth-of-type(1) {
-      background-color: #00ffff;
-      box-shadow: 0px 0px 5px #00ffff, 0px 0px 2px #00ffff;
-    }
-
-    #nav-container.mode-4c .icon-bar:nth-of-type(2) {
-      background-color: #ffff00;
-      box-shadow: 0px 0px 5px #ffff00, 0px 0px 2px #ffff00;
-    }
-
-    #nav-container.mode-4c .icon-bar:nth-of-type(3) {
-      background-color: #00ff00;
-      box-shadow: 0px 0px 5px #00ff00, 0px 0px 2px #00ff00;
-    }
-
-    #nav-container.mode-4c .icon-bar:nth-of-type(4) {
-      background-color: #ff00ff;
-      box-shadow: 0px 0px 5px #ff00ff, 0px 0px 2px #ff00ff;
-    }
-
-    #nav-container:focus-within #nav-button {
-      pointer-events: none;
-    }
-
-    #nav-container:focus-within .icon-bar {
-      background-color: #aaa;
-      background-image: none !important;
-      box-shadow: none !important;
-    }
-
-    #nav-button.attention:focus-within .icon-bar {
-      background-color: #00ffff;
-    }
-
-    #nav-container:focus-within .icon-bar:nth-of-type(1) {
-      transform: translate3d(0, 9px, 0) rotate(45deg);
-    }
-
-    #nav-container:focus-within .icon-bar:nth-of-type(2),
-    #nav-container:focus-within .icon-bar:nth-of-type(3) {
-      opacity: 0;
-    }
-
-    #nav-container:focus-within .icon-bar:nth-of-type(4) {
-      transform: translate3d(0, -9px, 0) rotate(-45deg);
-    }
-
-    #nav-content {
-      margin-top: 60px;
-      padding: 20px;
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: calc(100% - 60px);
-      overflow-x: clip;
-      background-color: #282C34;
-      text-align: center;
-      pointer-events: auto;
-      -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-      transform: translateX(-100%);
-      transition: transform .3s;
-    }
-
-    #nav-content ul {
-      height: calc(100% - 60px);
-      display: flex;
-      flex-direction: column;
-      list-style: none;
-    }
-
-    #nav-content hr {
-      border: 1px solid #444;
-    }
-
-    #nav-content li a {
-      display: block;
-      padding: 10px 5px;
-      color: #9fa6b2;
-      text-decoration: none;
-      transition: color .1s;
-    }
-
-    #nav-content li a.attention {
-      animation: glowing 1.5s infinite alternate;
-    }
-
-    #nav-content li a {
-      font-variant: small-caps;
-      font-size: 2em;
-    }
-
-    #nav-content h4 {
-      font-variant: small-caps;
-      padding-top: 1em;
-    }
-
-    #nav-content li.modesel a {
-      display: inline-block;
-      width: 2em;
-    }
-
-    #nav-content li:hover {
-      background-color: #2c323c;
-    }
-
-    #nav-content li:not(.small)+.small {
-      margin-top: auto;
-    }
-
-    #nav-content li.small {
-      display: flex;
-      align-self: center;
-    }
-
-    #nav-content li.small a {
-      font-size: 1em;
-    }
-
-    #nav-content li .range {
-      margin-top: 0.6em;
-      width: 100%;
-    }
-
-    #nav-container:focus-within #nav-content {
-      transform: none;
-    }
-
-    @keyframes glowing {
-      0% {
-        color: #00ffff;
-      }
-    }
+    html, body { overflow: hidden; }
+    [hidden] { display: none !important; }
+    #app { height: 100vh; display: grid; align-items: center; }
+    #startup { position: fixed; inset: 0; z-index: 10; display: grid; place-content: center; gap: 24px; text-align: center; background: #101827; color: #eef3fc; font-family: system-ui, sans-serif; }
+    #startup p { margin: 0; font-size: 22px; }
+    #startup-progress { width: min(320px, 80vw); height: 8px; accent-color: #56b9ff; }
+    #canvas { visibility: hidden; }
+    #dragdrop.active #canvas { visibility: visible; }
+    #dragdrop.active .drop-message { display: none; }
+    #dragdrop:focus-visible { outline-color: #56b9ff; }
   </style>
-
-  <div id="status"></div>
-  <div id="dragdrop" class="dragdrop" title="Drag and drop a file" onclick="Main.clickNav()">
-    <div class="drop-message">
-      <p class="msg-default">⌜ Tap to start! ⌟</p>
-      <p class="msg-error">⌜ Error! WebGL is not enabled :( ⌟</p>
-      <p class="msg-default msg-bottom">⚠️⚡ PHOTOSENSITIVITY WARNING!</p>
-      <p class="msg-default msg-long">Photosensitive epilepsy + flickering light = seizure!</p>
-      <p class="msg-default msg-long">Be safe! Have fun! ⚠️⚡</p>
-    </div>
-    <canvas id="canvas" class="canvas"></canvas>
+</head>
+<body>
+  <div id="startup" role="status" aria-live="polite">
+    <p>正在检测运行网络</p>
+    <progress id="startup-progress" max="100" value="0" aria-label="正在检测运行网络"></progress>
   </div>
-
-  <input style="display:none;" type="file" name="file_input" id="file_input" onchange="Main.fileInput(this);" />
-
-  <div id="nav-container" class="mode-b">
-    <div class="bg" onpointerdown="Main.blurNav(); event.preventDefault();"></div>
-    <button id="nav-button" tabindex="0" onclick="Main.clickNav();">
-      <span class="icon-bar"></span>
-      <span class="icon-bar"></span>
-      <span class="icon-bar"></span>
-      <span class="icon-bar"></span>
-    </button>
-    <div id="nav-content" tabindex="-1">
-      <span id="current-file">No file selected</span>
-      <ul>
-        <li><a class="attention" id="nav-find-file-link" href="javascript:void(0)" onclick="Main.clickFileInput()">Find
-            File</a></li>
-        <hr>
-        <li class="modesel">
-          <h4>Mode</h4>
-          <a class="mode-b" href="javascript:void(0)" onclick="Main.setMode('B')">B</a>
-          <a class="mode-bm" href="javascript:void(0)" onclick="Main.setMode('Bm')">Bm</a>
-          <a class="mode-bu" href="javascript:void(0)" onclick="Main.setMode('Bu')">Bu</a>
-          <a class="mode-4c" href="javascript:void(0)" onclick="Main.setMode('4C')">4C</a>
-        </li>
-        <li>
-          <h4>Framerate</h4>
-          <input type="range" class="range" min="5" max="20" step="5" value="15" oninput="Main.setFPS(this.value)"
-            onchange="Main.setFPS(this.value)" />
-        </li>
-        <li class="small"><a href="javascript:void(0)" onclick="Main.toggleFullscreen()">Fullscreen</a></li>
-        <li class="small"><a href="https://github.com/sz3/libcimbar">github</a></li>
-        <li class="small"><a href="https://github.com/sz3/cfc/releases/latest">android app</a></li>
-      </ul>
+  <main id="app" hidden>
+    <div id="status"></div>
+    <div id="dragdrop" class="dragdrop" role="button" tabindex="0" aria-label="点击/拖动本地文件" onclick="Main.clickFileInput()" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); Main.clickFileInput(); }">
+      <div class="drop-message">
+        <p class="msg-default">⌜ 点击/拖动本地文件 ⌟</p>
+        <p class="msg-error">无法播放：浏览器未启用 WebGL</p>
+      </div>
+      <canvas id="canvas" class="canvas" aria-label="码流播放区"></canvas>
     </div>
-  </div>
-
+    <input type="file" id="file_input" hidden onchange="Main.fileInput(this)">
+    <span id="current-file" hidden>未选择文件</span>
+  </main>
   <script src="send.js"></script>
   <script src="main.js"></script>
-
-  <script type="text/javascript">
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js');
-    }
-
+  <script>
+    Main.startup();
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
     var canvas = document.getElementById('canvas');
     if (!Main.init_ww(canvas)) {
       var Module = {};
       Module.canvas = canvas;
-      Module.onRuntimeInitialized = () => {
-        Main.init(canvas);
-      };
+      Module.onRuntimeInitialized = () => Main.init(canvas);
     }
-  </script>
-
-  <script type="text/javascript">
     Main.check_GL_enabled();
   </script>
   <script src="cimbar_js.js"></script>
-
 </body>
-
 </html>

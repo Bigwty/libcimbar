@@ -45,7 +45,7 @@ var Report = function () {
 var Main = function () {
 
   // configurable
-  var _interval = 66;
+  var _ready = false;
   var _colorBalance = false;
 
   // internal
@@ -72,7 +72,12 @@ var Main = function () {
       if (!_ww) { // no webworker, use main thread
         console.log("main thread impl");
         Send.init_window(canvas);
-        Main.setMode('B');
+        Main.setMode();
+        Main.setFPS(15);
+        _ready = true;
+        const chooseFile = document.getElementById("choose-file");
+        if (chooseFile) chooseFile.disabled = false;
+        Main.resize();
         Send.nextFrame();
         return;
       }
@@ -106,7 +111,12 @@ var Main = function () {
         return;
       }
 
-      Main.setMode('B');
+      Main.setMode();
+      Main.setFPS(15);
+      _ready = true;
+      const chooseFile = document.getElementById("choose-file");
+      if (chooseFile) chooseFile.disabled = false;
+      Main.resize();
       _ww.postMessage({ fun: 'nextFrame', args: [] });
     },
 
@@ -119,12 +129,13 @@ var Main = function () {
     },
 
     resize: function () {
+      if (!_ready) return;
       // reset zoom
       var canvas = document.getElementById('canvas');
-      var width = window.innerWidth - 10;
-      var height = window.innerHeight - 10;
+      var width = Math.max(1, window.innerWidth - 12);
+      var height = Math.max(1, window.innerHeight - 12);
       Main.scaleCanvas(canvas, width, height);
-      Main.checkNavButtonOverlap();
+
     },
 
     toggleFullscreen: function () {
@@ -191,6 +202,7 @@ var Main = function () {
     },
 
     importFile: function (fblob) {
+      if (!_ready || document.getElementById("app")?.hidden) return;
       if (!_ww) {
         Send.importFile(fblob);
         return;
@@ -208,33 +220,8 @@ var Main = function () {
       }
     },
 
-    checkNavButtonOverlap: function () {
-      var nav = document.getElementById("nav-button");
-      var navBounds = nav.getBoundingClientRect();
-      var canvas = document.getElementById('canvas').getBoundingClientRect();
-      if (navBounds.right > canvas.left && navBounds.bottom > canvas.top) {
-        nav.classList.add("hide");
-      }
-      else {
-        nav.classList.remove("hide");
-      }
-    },
-
-    clickNav: function () {
-      document.getElementById("nav-button").focus();
-    },
-
-    blurNav: function (pause) {
-      if (pause === undefined) {
-        pause = true;
-      }
-      if (document.activeElement && document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-      }
-      Main.togglePause(pause);
-    },
-
     clickFileInput: function () {
+      if (!_ready || document.getElementById("app").hidden) return;
       document.getElementById("file_input").click();
     },
 
@@ -244,7 +231,8 @@ var Main = function () {
       if (file) {
         Main.importFile(file);
       }
-      Main.blurNav(false);
+      Main.togglePause(false);
+      document.getElementById("file_input").value = "";
     },
 
     setAspectRatio: function (idealRatio) {
@@ -254,58 +242,30 @@ var Main = function () {
 
     setActive: function (active) {
       // hide cursor when there's a barcode active
-      var invisi = document.getElementById("dragdrop");
-      dragdrop.classList.add("active");
+      document.getElementById("dragdrop").classList.add("active");
     },
 
-    setMode: function (mode_str) {
-      let modeVal = 68;
-      if (mode_str == "4C") {
-        modeVal = 4;
-      }
-      else if (mode_str == "Bu") {
-        modeVal = 66;
-      }
-      else if (mode_str == "Bm") {
-        modeVal = 67;
-      }
+    // Mode B is the only encoder configuration.
+    setMode: function () {
+      if (_ww) _ww.postMessage({ fun: 'setMode', args: [] });
+      else Send.setMode();
+    },
 
-      // will trigger setAspectRatio callback
-      if (_ww) {
-        _ww.postMessage({ fun: 'setMode', args: [modeVal] });
+    startup: function () {
+      const started = performance.now();
+      const progress = document.getElementById('startup-progress');
+      function update() {
+        const elapsed = performance.now() - started;
+        progress.value = Math.min(100, elapsed / 40);
+        if (elapsed < 4000) {
+          requestAnimationFrame(update);
+        } else {
+          document.getElementById('startup').hidden = true;
+          document.getElementById('app').hidden = false;
+          Main.resize();
+        }
       }
-      else {
-        Send.setMode(modeVal);
-      }
-
-      var nav = document.getElementById("nav-container");
-      if (modeVal == 4) {
-        nav.classList.remove("mode-b");
-        nav.classList.add("mode-4c");
-        nav.classList.remove("mode-b");
-        nav.classList.remove("mode-bm");
-        nav.classList.remove("mode-bu");
-      } else if (modeVal == 66) {
-        nav.classList.add("mode-bu");
-        nav.classList.remove("mode-b");
-        nav.classList.remove("mode-bm");
-        nav.classList.remove("mode-4c");
-      } else if (modeVal == 67) {
-        nav.classList.add("mode-bm");
-        nav.classList.remove("mode-b");
-        nav.classList.remove("mode-bu");
-        nav.classList.remove("mode-4c");
-      } else if (modeVal == 68) {
-        nav.classList.add("mode-b");
-        nav.classList.remove("mode-bm");
-        nav.classList.remove("mode-bu");
-        nav.classList.remove("mode-4c");
-      } else {
-        nav.classList.remove("mode-b");
-        nav.classList.remove("mode-bm");
-        nav.classList.remove("mode-bu");
-        nav.classList.remove("mode-4c");
-      }
+      requestAnimationFrame(update);
     },
 
     setFPS: function (val) {
@@ -321,7 +281,8 @@ var Main = function () {
     },
 
     setHTML: function (id, msg) {
-      document.getElementById(id).innerHTML = msg;
+      const element = document.getElementById(id);
+      if (element) element.textContent = msg;
     },
 
     setTitle: function (msg) {
@@ -329,84 +290,6 @@ var Main = function () {
     }
   };
 }();
-
-window.addEventListener('keydown', function (e) {
-  e = e || event;
-  if (e.target instanceof HTMLBodyElement) {
-    if (e.key == 'Enter' || e.keyCode == 13 ||
-      e.key == 'Tab' || e.keyCode == 9 ||
-      e.key == 'Space' || e.keyCode == 32
-    ) {
-      Main.clickNav();
-      e.preventDefault();
-    }
-    else if (e.key == 'Backspace' || e.keyCode == 8) {
-      Main.togglePause(true);
-      e.preventDefault();
-    }
-  }
-  else {
-    if (e.key == 'Escape' || e.keyCode == 27 ||
-      e.key == 'Backspace' || e.keyCode == 8 ||
-      e.key == 'End' || e.keyCode == 35 ||
-      e.key == 'Home' || e.keyCode == 36
-    ) {
-      Main.blurNav();
-    }
-    else if (e.key == 'Tab' || e.keyCode == 9 ||
-      e.key == 'ArrowDown' || e.keyCode == 40
-    ) {
-      var nav = document.getElementById('nav-button');
-      var links = document.getElementById('nav-content').getElementsByTagName('a');
-      if (nav.classList.contains('attention')) {
-        nav.classList.remove('attention');
-        links[0].classList.add('attention');
-        return;
-      }
-      for (var i = 0; i < links.length; i++) {
-        if (links[i].classList.contains('attention')) {
-          var next = i + 1 == links.length ? nav : links[i + 1];
-          links[i].classList.remove('attention');
-          next.classList.add('attention');
-          break;
-        }
-      }
-    }
-    else if (e.key == 'ArrowUp' || e.keyCode == 38) {
-      var nav = document.getElementById('nav-button');
-      var links = document.getElementById('nav-content').getElementsByTagName('a');
-      if (nav.classList.contains('attention')) {
-        nav.classList.remove('attention');
-        links[links.length - 1].classList.add('attention');
-        return;
-      }
-
-      for (var i = 0; i < links.length; i++) {
-        if (links[i].classList.contains('attention')) {
-          var next = i == 0 ? nav : links[i - 1];
-          links[i].classList.remove('attention');
-          next.classList.add('attention');
-          break;
-        }
-      }
-    }
-    else if (e.key == 'Enter' || e.keyCode == 13 ||
-      e.key == ' ' || e.keyCode == 32
-    ) {
-      var nav = document.getElementById('nav-button');
-      if (nav.classList.contains('attention')) {
-        Main.blurNav();
-        return;
-      }
-      var links = document.getElementById('nav-content').getElementsByTagName('a');
-      for (var i = 0; i < links.length; i++) {
-        if (links[i].classList.contains('attention')) {
-          links[i].click();
-        }
-      }
-    }
-  }
-}, true);
 
 window.addEventListener("touchstart", function (e) {
   e = e || event;
